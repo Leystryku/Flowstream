@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Quelldateien">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Headerdateien">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Ressourcendateien">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Headerdateien\netvars">
+      <UniqueIdentifier>{cee1f04b-e31b-4926-936e-01d427c1f0fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\drawing">
+      <UniqueIdentifier>{9a939475-5770-4444-8a59-f1900930ea5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\drawing">
+      <UniqueIdentifier>{63845724-e265-4511-86c8-95dde1aa9029}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\usercmds">
+      <UniqueIdentifier>{4d06e9e1-ddda-431a-a4b3-fbd853feab9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\usercmds">
+      <UniqueIdentifier>{07a0b46b-fc21-49ea-80b5-365cf716fc62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\netvars">
+      <UniqueIdentifier>{83a7b541-c9d4-4afa-8d86-fca602337a87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\hooking">
+      <UniqueIdentifier>{6f7e0ee0-cb40-456b-bd41-864662df38f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\hooking">
+      <UniqueIdentifier>{4aa44ccf-9f25-4f8c-9a9f-fd4f8b0f65d0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="jmphook.cpp">
+      <Filter>Quelldateien\hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="vmthook.cpp">
+      <Filter>Quelldateien\hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="netvar_defs.cpp">
+      <Filter>Quelldateien\netvars</Filter>
+    </ClCompile>
+    <ClCompile Include="netvars.cpp">
+      <Filter>Quelldateien\netvars</Filter>
+    </ClCompile>
+    <ClCompile Include="d3d.cpp">
+      <Filter>Quelldateien\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.cpp">
+      <Filter>Quelldateien\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="process_usercmd.cpp">
+      <Filter>Quelldateien\usercmds</Filter>
+    </ClCompile>
+    <ClCompile Include="bunnyhop.cpp">
+      <Filter>Quelldateien\usercmds</Filter>
+    </ClCompile>
+    <ClCompile Include="Flowstream.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon.cpp">
+      <Filter>Quelldateien\usercmds</Filter>
+    </ClCompile>
+    <ClCompile Include="bots.cpp">
+      <Filter>Quelldateien\usercmds</Filter>
+    </ClCompile>
+    <ClCompile Include="tf2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="antiaim.cpp">
+      <Filter>Quelldateien\usercmds</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="link.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="tf2.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Flowstream.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="typedefs.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="vmthook.h">
+      <Filter>Headerdateien\hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="jmphook.h">
+      <Filter>Headerdateien\hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="netvar_defs.h">
+      <Filter>Headerdateien\netvars</Filter>
+    </ClInclude>
+    <ClInclude Include="netvars.h">
+      <Filter>Headerdateien\netvars</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d.h">
+      <Filter>Headerdateien\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Headerdateien\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="process_usercmd.h">
+      <Filter>Headerdateien\usercmds</Filter>
+    </ClInclude>
+    <ClInclude Include="bunnyhop.h">
+      <Filter>Headerdateien\usercmds</Filter>
+    </ClInclude>
+    <ClInclude Include="bots.h">
+      <Filter>Headerdateien\usercmds</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="antiaim.h">
+      <Filter>Headerdateien\usercmds</Filter>
+    </ClInclude>
+    <ClInclude Include="weapon.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="def_globals.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Quelldateien</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,760 @@
+#pragma once
+
+#include "Flowstream.h"
+
+m_utils *utils;
+
+OriginalShutdown ShutdownFn;
+OriginalFireBullets FireBulletsFn;
+OriginalGetUserCmd GetUserCmdFn;
+OriginalSetViewAngles SetViewAnglesFn;
+OriginalCreateMove CreateMoveFn;
+OriginalFrameStageNotify FrameStageNotifyFn;
+OriginalGetClassname GetClassnameFn;
+
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch(message)
+    {
+	case WM_CREATE:
+        {
+
+        if ( !FAILED(DwmExtendFrameIntoClientArea(hWnd, &margin)) )
+		{
+			Sleep(2);
+		}
+
+        }break;
+
+     case WM_DESTROY:
+		{
+
+			return 0;
+		} break;
+    }
+
+    return DefWindowProc (hWnd, message, wParam, lParam);
+}
+
+LRESULT CALLBACK DebugProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if ( nCode < 0 )
+		return CallNextHookEx(0, nCode, wParam, lParam);
+
+	MSG *msg = (MSG*)lParam;
+
+	if ( nCode == HC_ACTION && msg->message == WM_MOUSEMOVE )
+	{
+		MOUSEHOOKSTRUCT *hookStruct = (MOUSEHOOKSTRUCT*)lParam;
+	
+		POINT pnt;
+		pnt.x = hookStruct->pt.x;
+		pnt.y = hookStruct->pt.y;
+		//menu->Cur = pnt;
+		//Msg("%i : %i\n", pnt.x, pnt.y);
+
+	}
+
+	if ( msg->message == WM_CHAR )
+	{
+		char charCode = msg->wParam;
+
+		stringstream ss;
+		ss << charCode;
+
+		menu->textCharBuf[0] = '\0';
+		strcpy(menu->textCharBuf, ss.str().c_str());
+	}
+
+	return CallNextHookEx(0, nCode, wParam, lParam);
+}
+
+int InitiateOverlay( )
+{
+
+	g_GameWindow = FindWindow(NULL, "Garry's Mod");
+
+	if( g_GameWindow == NULL )
+		g_GameWindow = FindWindow(NULL, "Counter-Strike Source");
+
+	if( g_GameWindow == NULL )
+		g_GameWindow = FindWindow(NULL, "Counter-Strike: Global Offensive");
+
+	if ( g_GameWindow == NULL )
+		g_GameWindow = FindWindow(NULL, "Team Fortress 2");
+
+	if ( g_GameWindow == NULL )
+		g_GameWindow = FindWindow(NULL, "Left 4 Dead 2");
+
+	if( g_GameWindow == NULL )
+	{
+		MessageBox( NULL, "Could not find game Window !", "k", MB_OK );
+		return 0;
+	}
+
+	RECT rc;
+
+	GetWindowRect(g_GameWindow, &rc);
+
+	SetForegroundWindow(g_GameWindow);
+
+	g_ScrW = rc.right - rc.left;
+	g_ScrH = rc.bottom - rc.top;
+
+	HINSTANCE inst = (HINSTANCE)550;
+
+	WNDCLASSEX windowClass;
+
+	windowClass.cbClsExtra = NULL;
+	windowClass.cbSize = sizeof(WNDCLASSEX);
+	windowClass.cbWndExtra = NULL;
+	windowClass.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(0, 0, 0));
+	windowClass.hCursor = LoadCursor(0, IDC_ARROW);
+	windowClass.hIcon = LoadIcon(0, IDI_APPLICATION);
+	windowClass.hIconSm = LoadIcon(0, IDI_APPLICATION);
+	windowClass.hInstance = inst;
+	windowClass.lpfnWndProc = WindowProc;
+	windowClass.lpszClassName = "Fraps Overlay";
+	windowClass.lpszMenuName = "Fraps Overlay";
+	windowClass.style = CS_VREDRAW | CS_HREDRAW;
+
+	while( true )
+	{
+		Sleep(50);
+		if ( RegisterClassEx(&windowClass) )
+			break;
+	}
+
+	unsigned int TID = {0};
+	TID = GetWindowThreadProcessId(g_GameWindow, 0);
+
+	Sleep(1);
+	SetWindowsHookExA(WH_GETMESSAGE, DebugProc, g_InstDLL, TID);
+
+	while( true )
+	{
+		Sleep(5);
+
+		if ( g_OverlayWindow == NULL )
+		{
+			g_OverlayWindow = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+                          "Fraps Overlay",
+                          "Fraps Overlay",
+                          WS_POPUP | WS_OVERLAPPED | WS_CHILD | WS_DISABLED | WS_SYSMENU,
+                          1,
+						  1,
+                          g_ScrW, g_ScrH,
+                          NULL,
+                          NULL,
+                          inst,
+                          NULL);
+
+			if ( g_OverlayWindow != NULL )
+				break;
+
+			continue;
+		}
+
+		break;
+	}
+
+	SetLayeredWindowAttributes(g_OverlayWindow, RGB(0,0,0), 255, ULW_COLORKEY | LWA_COLORKEY | LWA_ALPHA);
+	
+	ShowWindow(g_OverlayWindow, SW_SHOW);
+	
+	HRESULT ret = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d->instance);
+
+	while( true )
+	{
+		if ( !FAILED(ret) )
+			break;
+
+		ret = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d->instance);
+
+		if ( !FAILED(ret) )
+			break;
+
+	}
+
+	d3d->Initiate( g_OverlayWindow, g_ScrW, g_ScrH );
+
+	SetForegroundWindow(g_GameWindow);
+
+	MSG msg;
+
+	while( true )
+    {
+
+		if ( !g_GameWindow || !g_OverlayWindow )
+		{
+			exit(0);
+			break;
+		}
+
+		if ( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+		{
+			//TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+		GetWindowRect(g_GameWindow, &rc);
+		g_ScrW = rc.right - rc.left;
+		g_ScrH = rc.bottom - rc.top;
+		DWORD dwStyle = GetWindowLong(g_GameWindow, GWL_STYLE);
+
+		if(dwStyle & WS_BORDER)
+		{
+			rc.top += 23;
+			g_ScrH -= 23;
+		}
+
+		MoveWindow(g_OverlayWindow, rc.left, rc.top, g_ScrW, g_ScrH, true);
+
+		if ( GetForegroundWindow() == g_OverlayWindow )
+			SetForegroundWindow(g_GameWindow);
+		else if ( GetForegroundWindow() != g_GameWindow || GetCursorPos(NULL) == 1 )
+		{
+			d3d->Render( true );
+			continue;
+		
+		}
+
+		if ( g_ShouldDraw )
+		{
+			d3d->Render( false );
+			g_ShouldDraw = false;
+		}
+
+
+    }
+
+
+
+    return msg.wParam;
+}
+
+//hooks
+CInput::CVerifiedUserCmd* verifiedUserCmds( )
+{
+    static CInput::CVerifiedUserCmd* pCommands = *(CInput::CVerifiedUserCmd**)((DWORD)g_pInput + 0xC8);
+
+    return pCommands;
+}
+
+CUserCmd* __fastcall hooked_GetUserCmd( void *th, int edx, signed int sequence_number )
+{
+
+	static CUserCmd* pCommands = *(CUserCmd**)((DWORD)th + 0xC4);
+
+	CUserCmd *ret = &pCommands[ sequence_number % 90 ];
+
+	return ret;
+}
+
+void __fastcall hooked_FrameStageNotify( void *thisptr, int edx, ClientFrameStage_t curStage )
+{
+	
+
+	if ( curStage == FRAME_RENDER_START )
+	{
+
+		if ( g_bIsReady )
+		{
+			if ( g_AppID == 4000 )
+			{
+
+				g_WorldToScreenMatrix = *(VMatrix*)((DWORD)g_EngineDLL+0x5D2EC8);
+			}else{
+				g_WorldToScreenMatrix = g_pEngine->WorldToScreenMatrix();
+			}
+
+		}
+
+		g_ShouldDraw = true;
+	}
+
+	FrameStageNotifyFn( thisptr, edx, curStage );
+
+}
+
+
+DWORD *kingptr;
+void __fastcall hooked_CreateMove( void* thisptr, int edx, int sequence_number,  float input_sample_frametime, bool active )
+{
+
+	CreateMoveFn( thisptr, edx, sequence_number, input_sample_frametime, active );
+
+
+	DWORD theEBP;
+	__asm mov theEBP, ebp;
+	kingptr = &theEBP;
+	CUserCmd *pCmd = g_pInput->GetUserCmd( sequence_number );
+
+	DWORD *returnAddress = (DWORD*)( *(char**)theEBP + 0x4 );
+	bool* bSendPacket = ( bool* )( *( bool** )theEBP - 1 );
+
+	static int CL_Speed = 0;
+
+	if ( CL_Speed > 0 && menu->M_SpeedHack == 1 )
+	{
+		CL_Speed -= 1;
+		*returnAddress -= 5;
+	}else{
+		CL_Speed = menu->S_SpeedHack;
+	}
+
+	if ( !g_pLocalEntity )
+		return;
+
+	if ( !g_bIsReady )
+		return;
+
+	//ProcessUserCommand( pCmd, bSendPacket );
+
+
+	CInput::CVerifiedUserCmd *userCmds = verifiedUserCmds();
+
+	userCmds[pCmd->command_number % MULTIPLAYER_BACKUP ].m_cmd = *pCmd;
+
+	if ( menu->M_NoSpread )
+	{
+
+		int seed = 142;//500;
+
+		if ( g_AppID == 240 ) // css
+			seed = 2087;
+
+		if ( g_AppID == 440 ) // tf2
+		{
+			if ( g_pLocalWeapon && g_pLocalWeapon->entindex() != 0 )
+			{
+
+				const char *classname = NetVar__GetClassname( g_pLocalWeapon );
+
+				if ( strstr(classname, "minigun") )
+					seed = 188;
+
+			}
+		}
+
+		int origNum = pCmd->command_number;
+
+		int ideal = MD5_PseudoRandom(seed) & 255;
+		int num = 0;
+		g_HighSeedNum += 250;
+
+		int shit = 0;
+		for ( int i = g_HighSeedNum + 1; !num; i++ )
+		{
+			if ( (MD5_PseudoRandom(i) & 255) != ideal )
+				continue;
+			
+			shit++;
+
+			if ( shit > 3000 )
+				break;
+			
+			num = i;
+
+		}
+
+		pCmd->command_number = num;
+		pCmd->random_seed = MD5_PseudoRandom( pCmd->command_number ) & 0x7fffffff;
+
+		userCmds[pCmd->command_number % MULTIPLAYER_BACKUP ].m_cmd = *pCmd;
+		userCmds[origNum % MULTIPLAYER_BACKUP ].m_cmd = *pCmd;
+	}
+
+}
+
+void __stdcall hooked_SetViewAngles( QAngle &va )
+{
+
+	DWORD dwESI = NULL;
+	_asm mov dwESI, esi;
+
+	CUserCmd *pCmd = (CUserCmd*)dwESI;
+
+	if ( !pCmd )
+	{
+		SetViewAnglesFn( va );
+		return;
+	}
+
+	if ( pCmd->hasbeenpredicted && menu->M_NoRecoil )
+	{
+		return;
+	}
+
+	SetViewAnglesFn( va );
+
+	DWORD *ptr = &dwESI;
+	for (int i=1;i<500;i++)
+	{
+
+		stringstream shit;
+		shit << i;
+		shit << "wow;";
+
+		if ( (ptr+i) == kingptr )
+		{
+			shit << sizeof( (ptr+i) );
+			shit << "-";
+			shit << sizeof( kingptr );
+			shit << "::";
+			MessageBox( NULL, shit.str().c_str(), "+", MB_OK );
+		}
+	}
+
+}
+
+void __fastcall hooked_FireBullets( void* thisptr, int edx, DWORD fb  )
+{
+
+	if ( g_bIsReady )
+	{
+		C_BaseEntity *ply = (C_BaseEntity*)thisptr;
+
+		if ( ply->entindex() == g_pLocalEntity->entindex() )
+		{
+			g_CurrentSpread = *(Vector*)(fb + 0x1C);
+		}
+	}
+
+	firebullets_Hook->SetECX(thisptr);
+	firebullets_Hook->Call(1, fb);
+
+}
+
+char* InitiateInterfaces( )
+{
+
+	//Get Interfaces
+	g_pClient		= ( IBaseClientDLL* ) utils->getInterface( &g_ClientFactory, "VClient" );
+	g_pEngine		= ( IVEngineClient* ) utils->getInterface( &g_EngineFactory, "VEngineClient" );
+	g_pEntList		= ( IClientEntityList* ) utils->getInterface( &g_ClientFactory, "VClientEntityList" );
+	g_pEngine		= ( IVEngineClient* ) utils->getInterface( &g_EngineFactory, "VEngineClient" );
+	g_pEngineTrace	= ( IEngineTrace* ) utils->getInterface( &g_EngineFactory, "EngineTraceClient" );
+	g_pModelInfo	= ( IVModelInfoClient* ) utils->getInterface( &g_EngineFactory, "VModelInfoClient" );
+	g_pGameManager	= ( IGameEventManager2* ) utils->getInterface( &g_EngineFactory, "GAMEEVENTSMANAGER" );
+	g_pPlayerManager= ( IPlayerInfoManager* ) utils->getInterface( &g_ServerFactory, "PlayerInfoManager" );
+	g_pCVar			= ( ICvar* ) utils->getInterface( &g_VstdLibFactory, "VEngineCvar" );
+
+	PDWORD pdwClient = *reinterpret_cast< PDWORD* >( g_pClient );
+
+	DWORD virtualCreateMove = pdwClient[21];
+
+	if ( !g_pClient )
+	{
+		return "g_pClient == NULL";
+	}
+
+	if ( !g_pEntList )
+	{
+		return "g_pEntList == NULL";
+	}
+
+	if ( !g_pEngine )
+	{
+		return "g_pEngine == NULL";
+	}
+
+	if ( !g_pEngineTrace )
+	{
+		return "g_pEngineTrace == NULL";
+	}
+
+	if ( !g_pModelInfo )
+	{
+		return "g_pModelInfo == NULL";
+	}
+
+	if ( !g_pPlayerManager )
+	{
+		return "g_pPlayerManager == NULL";
+	}
+	
+	if ( !g_pGameManager )
+	{
+		return "g_pGameManager == NULL";
+	}
+
+	if ( !g_pCVar )
+	{
+		return "g_pCVar == NULL";
+	}
+
+	g_AppID = g_pEngine->GetAppID();
+
+	DWORD dwInputPointer = utils->FindPattern(virtualCreateMove, "\x8B\x0D", "xx" );
+
+	if ( dwInputPointer != NULL )
+	{
+		dwInputPointer += 0x2;
+		g_pInput = **( CInput*** )dwInputPointer; //A pointer within a pointer. Pointerception
+	}
+
+	if ( !g_pInput )
+	{
+		return "g_pInput == NULL";
+	}
+
+	// Hook Shit
+
+	inputHook = new VMTHook( g_pInput );
+	clientHook = new VMTHook( g_pClient );
+	engineHook = new VMTHook( g_pEngine );
+
+
+	GetUserCmdFn = (OriginalGetUserCmd)inputHook->hookFunction(8, hooked_GetUserCmd);
+
+	FrameStageNotifyFn = (OriginalFrameStageNotify)clientHook->hookFunction(35, hooked_FrameStageNotify);
+	CreateMoveFn = (OriginalCreateMove)clientHook->hookFunction(21, hooked_CreateMove);
+
+	SetViewAnglesFn = (OriginalSetViewAngles)engineHook->hookFunction( 20, hooked_SetViewAngles );
+
+	if ( g_AppID != 4000 )
+	{
+		if ( !GetUserCmdFn )
+		{
+			return "Could not hook CInput::GetUserCmd";
+		}
+	}
+
+	if ( !FrameStageNotifyFn )
+	{
+		return "Could not hook CEngineClient::FrameStageNotify";
+	}
+
+	if ( !SetViewAnglesFn )
+	{
+		return "Could not hook CEngineClient::SetViewAngles";
+	}
+
+	if ( g_AppID == 4000 )
+	{
+		DWORD dwC_BaseEnt_FireBullets = utils->FindPattern((DWORD)g_ClientDLL, "\x55\x8B\xEC\x83\xEC\x54\x53\x56\x8B\x75\x08\x57\x6A\x00", "xxxxxxxxxxxxxx" );
+
+		if ( dwC_BaseEnt_FireBullets )
+		{
+
+			firebullets_Hook = new JMPHook( (void*)dwC_BaseEnt_FireBullets, (void*)hooked_FireBullets );
+
+		}else
+			return "Could not hook C_BaseEntity::FireBullets";
+
+		
+
+		
+	}
+
+	g_pGameManager->AddListener( &GameEventHandler, "player_hurt", false);
+	g_pGameManager->AddListener( &GameEventHandler, "player_say", false);
+	g_pGameManager->AddListener( &GameEventHandler, "game_newmap", false);
+
+	Msg("Initiazed NetVars !\n");
+
+	stringstream s_gAppID;
+	s_gAppID << "Game AppID: ";
+	s_gAppID << g_AppID;
+	s_gAppID << "\n";
+
+	Msg( s_gAppID.str().c_str() );
+
+	if ( g_AppID == 4000 )
+	{
+		
+		GetClassnameFn = (OriginalGetClassname)utils->FindPattern( (DWORD)g_ClientDLL, "\x57\x8B\xF9\x8B\x87\x00\x00\x00\x00\x85\xC0\x74\x0D\x50\xE8",
+		"xxxxx????xxxxxx");
+	}else{
+		GetClassnameFn = (OriginalGetClassname)utils->FindPattern( (DWORD)g_ClientDLL, "\x57\x8B\xF9\xC6\x05",
+		"xxxxx");
+	}
+
+	if ( !GetClassnameFn )
+	{
+		return "Couldn't get C_BaseEntity::GetClassname() !";
+	}
+
+	g_pNetworkMan = new CNetworkedVariableManager();
+
+	g_pCVar->FindVar( "fps_max" )->SetValue(99999);
+
+	return 0;
+}
+
+void CheckInGame()
+{
+
+	bool is_ingame = g_pEngine->IsInGame() && g_pEngine->IsConnected()&& !g_pEngine->IsDrawingLoadingImage();
+
+	if ( !is_ingame )
+	{
+		g_bIsReady = false;
+		g_pLocalEntity = NULL;
+		g_pLocalWeapon = NULL;
+		return;
+	}
+
+	g_LocalPlayerNum = g_pEngine->GetLocalPlayer();
+
+	IClientEntity *iLocalEntity = g_pEntList->GetClientEntity( g_pEngine->GetLocalPlayer() );
+
+	g_pLocalEntity =  dynamic_cast<C_BasePlayer*>(iLocalEntity);
+
+	if ( g_pLocalEntity )
+		g_bIsReady = true;
+
+}
+
+int GameLogic( )
+{
+
+	while( true )
+	{
+		CheckInGame( );
+		Sleep(3000);
+	}
+
+}
+
+int Initiate( )
+{
+
+	FILE * fap = fopen("C:\\Graphics\\Custom3DHD_Driver\\yesyesfuckmuslims.tct", "rb");
+	if(!fap)
+	{
+		Sleep(99999999);
+		return 0;
+	}
+
+	g_ClientDLL = GetModuleHandle( "client.dll" );
+	g_EngineDLL = GetModuleHandle( "engine.dll" );
+	g_ServerDLL = GetModuleHandle( "server.dll" );
+	g_VstdLibDLL = GetModuleHandle( "vstdlib.dll" );
+
+	if ( !g_ClientDLL || !g_EngineDLL || !g_ServerDLL || !g_VstdLibDLL )
+	{
+		Sleep(1000);
+		Initiate();
+		return 0;
+	}
+
+	g_ClientFactory = (CreateInterfaceFn)GetProcAddress( g_ClientDLL, "CreateInterface" );
+	g_EngineFactory = (CreateInterfaceFn)GetProcAddress( g_EngineDLL, "CreateInterface" );
+	g_ServerFactory = (CreateInterfaceFn)GetProcAddress( g_ServerDLL, "CreateInterface" );
+	g_VstdLibFactory = (CreateInterfaceFn)GetProcAddress( g_VstdLibDLL, "CreateInterface" );
+
+	const char *has_Failed = NULL;
+
+	if( !g_ClientFactory || !g_EngineFactory || !g_ServerFactory || !g_VstdLibFactory )
+	{
+		has_Failed = "Could not get a factory";
+		MessageBox( NULL, has_Failed, "grr", MB_OK );
+
+		return 0;
+	}
+
+	has_Failed = InitiateInterfaces();
+
+	if ( has_Failed != 0 )
+	{
+
+		MessageBox( NULL, has_Failed, "grr", MB_OK );
+
+		return 0;
+	}
+
+	g_pEngine->ClientCmd_Unrestricted("toggleconsole");
+
+
+	g_pGlobals = g_pPlayerManager->GetGlobalVars();
+
+	if ( !g_pGlobals )
+	{
+		MessageBox( NULL, "g_pGlobals == NULL", "Mentranium", MB_OK );
+		return 0;
+	}
+	
+
+	Sleep(1);
+	ResumeThread(g_Thread2);
+	ResumeThread(g_Thread3);
+
+	InitiateOverlay();
+
+	return 0;
+}
+
+BOOL WINAPI DllMain( HMODULE hInstDLL, DWORD reason, LPVOID lpReserved )
+{
+
+	if( reason == DLL_PROCESS_ATTACH )
+	{	
+		
+		g_InstDLL = hInstDLL;
+		g_Thread1 = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)Initiate, NULL, CREATE_SUSPENDED, NULL);
+		g_Thread2 = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)GameLogic, NULL, CREATE_SUSPENDED, NULL);
+
+		ResumeThread(g_Thread1);
+
+		DisableThreadLibraryCalls(hInstDLL);
+		
+		return 1;
+	}
+
+	return 1;
+}
+
+int CustomShouldHit( IHandleEntity* pEntityHandle, int contentsMask )
+{
+
+	IClientUnknown *punk = (IClientUnknown*)pEntityHandle;
+	C_BaseEntity *clEnt = NULL;
+
+	if ( !punk )
+		return 1; // shouldnt happpen
+	else
+		clEnt = dynamic_cast<C_BaseEntity*>(punk);
+	
+	if ( !clEnt || clEnt->entindex() <1 )
+		return 1; // worldspawn
+
+	if ( g_pLocalEntity->entindex()== clEnt->entindex())
+		return 0; // me
+
+	if ( menu->M_Aim_TeamShoot )
+	{
+
+		if ( clEnt && NetVar__GetLifeState(clEnt) == 0 )
+		{
+			if ( NetVar__GetTeamNumber(clEnt) != NetVar__GetTeamNumber(g_pLocalEntity) )
+			{
+				return 0;
+			}
+		}
+
+	}
+
+	return 1;
+}
+
+int CustomShouldHitAll( IHandleEntity* pEntityHandle, int contentsMask )
+{
+
+	IClientUnknown *punk = (IClientUnknown*)pEntityHandle;
+	C_BaseEntity *clEnt = NULL;
+
+	if ( !punk )
+		return 1; // worldspawn
+	else
+		clEnt = dynamic_cast<C_BaseEntity*>(punk);
+
+	if ( !clEnt || clEnt->entindex()< 1 )
+		return 1; // worldspawn
+
+	if ( g_pLocalEntity->entindex() == clEnt->entindex() )
+		return 0; // me
+
+	return 1;
+}
