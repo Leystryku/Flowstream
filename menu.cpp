@@ -3,6 +3,10 @@
 #include "menu.h"
 #include "d3d.h"
 
+//This menu was actually based on someone else's
+//I did some refactoring&fixing on it but that's it
+//I do not know the name however, because I acquired that code ~2011 and had been using it till ~2014 or something
+
 void Menu::Initiate()
 {
 	return;
